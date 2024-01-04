@@ -4,6 +4,8 @@ from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .products import products
+from .models import Product
+from .serializers import ProductSerializer
 
 def getRouters(request):
     return JsonResponse("Welcome to Python world", safe=False)
@@ -24,11 +26,14 @@ def getHome(request):
         return Response(routes)
 @api_view(['GET', 'POST'])
 def getProducts(request):
-    return Response(products)
+     products = Product.objects.all()
+     serializer = ProductSerializer(products, many=True)
+     return Response(serializer.data)
 @api_view(['GET'])
 def ProductDetail(request, pk):
-    product = None
-    for i in products:
-        if(i['_id'] == pk):
-            product = i
-    return Response(product)
+    try:
+        product = Product.objects.get(_id=pk)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+    except Product.DoesNotExist:
+        return Response({"message": "Product not found"}, status=404)
